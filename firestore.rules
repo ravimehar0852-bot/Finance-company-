@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Visitors may only CREATE validated enquiries. Nobody can read/update/delete from the browser.
+    match /enquiries/{id} {
+      allow read, update, delete: if false;
+      allow create: if request.resource.data.keys().hasOnly(
+            ['name','mobile','email','loanType','amount','employment','income','city','consent','source','createdAt'])
+        && request.resource.data.name is string && request.resource.data.name.size() >= 2 && request.resource.data.name.size() <= 80
+        && request.resource.data.mobile is string && request.resource.data.mobile.matches('^[6-9][0-9]{9}$')
+        && request.resource.data.email is string && request.resource.data.email.size() <= 120 && request.resource.data.email.matches('^[^@ ]+@[^@ ]+\\.[^@ ]+$')
+        && request.resource.data.loanType is string && request.resource.data.loanType.size() <= 30
+        && request.resource.data.amount is number && request.resource.data.amount >= 10000 && request.resource.data.amount <= 100000000
+        && request.resource.data.employment is string && request.resource.data.employment.size() <= 40
+        && request.resource.data.income is string && request.resource.data.income.size() <= 40
+        && request.resource.data.city is string && request.resource.data.city.size() >= 2 && request.resource.data.city.size() <= 60
+        && request.resource.data.consent == true
+        && request.resource.data.source is string && request.resource.data.source.size() <= 30
+        && request.resource.data.createdAt == request.time;
+    }
+
+    match /contactMessages/{id} {
+      allow read, update, delete: if false;
+      allow create: if request.resource.data.keys().hasOnly(
+            ['name','mobile','email','loanType','message','consent','source','createdAt'])
+        && request.resource.data.name is string && request.resource.data.name.size() >= 2 && request.resource.data.name.size() <= 80
+        && request.resource.data.mobile is string && request.resource.data.mobile.matches('^[6-9][0-9]{9}$')
+        && request.resource.data.email is string && request.resource.data.email.size() <= 120 && request.resource.data.email.matches('^[^@ ]+@[^@ ]+\\.[^@ ]+$')
+        && request.resource.data.loanType is string && request.resource.data.loanType.size() <= 30
+        && request.resource.data.message is string && request.resource.data.message.size() >= 10 && request.resource.data.message.size() <= 1000
+        && request.resource.data.consent == true
+        && request.resource.data.source is string && request.resource.data.source.size() <= 30
+        && request.resource.data.createdAt == request.time;
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}
